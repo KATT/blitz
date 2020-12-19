@@ -19,6 +19,12 @@ const IGNORE_NAMES = [
   /^@types/,
   /^@blitzjs/,
   'next',
+  /jest/,
+  'react',
+  'ts-node',
+  /^@babel/,
+  /^eslint/,
+  'tsdx',
 ]
 
 const filterIgnore = (name) => !IGNORE_NAMES.some((strOrRegex) => {
@@ -59,7 +65,7 @@ async function main() {
   spinner.succeed('Done. Printing results.\n')
 
   for (const result of results) {
-    console.log(`Dir: ${result.dir}:\n`)
+    console.log(`Dir: .${result.dir.substr(__dirname.length)}:\n`)
     console.log('Unused deps:', result.unusedDeps)
     console.log('Unused deps:', result.unusedDevDeps)
     console.log('Occurrences:')
