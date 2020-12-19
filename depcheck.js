@@ -14,6 +14,19 @@ const isDirectory = source => fs.lstatSync(source).isDirectory()
 const getDirectories = source =>
   fs.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
 
+
+const IGNORE_NAMES = [
+  /^@types/,
+  /^@blitzjs/,
+  'next',
+]
+
+const filterIgnore = (name) => !IGNORE_NAMES.some((strOrRegex) => {
+  if (typeof strOrRegex === 'string') {
+    return name === strOrRegex
+  }
+  return strOrRegex.test(name)
+})
 let spinner = ora('').start()
 async function main() {
   const dirs = [
@@ -29,9 +42,10 @@ async function main() {
 
     results.push({
       dir,
-      unusedDeps: check.dependencies.sort(),
-      unusedDevDeps: check.devDependencies.sort(),
+      unusedDeps: check.dependencies.filter(filterIgnore).filter(filterIgnore),
+      unusedDevDeps: check.devDependencies.filter(filterIgnore).sort(),
       occurrences: Object.entries(check.using)
+        .filter(([name]) => filterIgnore(name))
         .sort((a, b) => a[1].length - b[1].length)
         .reduce((sum, [name, files]) => ([
           ...sum,
