@@ -64,10 +64,17 @@ async function main() {
   }
   spinner.succeed('Done. Printing results.\n')
 
+  const prettyArray = (arr) => {
+    if (arr.length === 0) {
+      return '(none)'
+    }
+    return arr.map(str => `\n  - ${str}`).join('')
+  }
   for (const result of results) {
+
     console.log(`Dir: .${result.dir.substr(__dirname.length)}:\n`)
-    console.log('Unused deps:', result.unusedDeps)
-    console.log('Unused deps:', result.unusedDevDeps)
+    console.log('unusedDeps:', prettyArray(result.unusedDeps), '\n')
+    console.log('unusedDevDeps:', prettyArray(result.unusedDevDeps), '\n')
     console.log('Occurrences:')
     console.table(result.occurrences)
     console.log('\n--------------------------------\n')
