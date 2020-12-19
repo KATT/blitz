@@ -14,40 +14,49 @@ const isDirectory = source => fs.lstatSync(source).isDirectory()
 const getDirectories = source =>
   fs.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory)
 
-
+let spinner = ora('').start()
 async function main() {
-  let spinner = ora('').start()
-  const dirs = getDirectories(path.join(__dirname, 'packages'))
+  const dirs = [
+    __dirname,
+    ...getDirectories(path.join(__dirname, 'packages')),
+  ]
 
-  const result = {};
+  const results = []
   for (const [index, dir] of dirs.entries()) {
     spinner.text = `${index + 1}/${dirs.length} Checking ${dir}`
 
     const check = await depcheck(dir, options)
-    for (const [name, files] of Object.entries(check.using)) {
-      result[name] = result[name] ?? []
-      result[name].push(...files)
-    }
+
+    results.push({
+      dir,
+      unusedDeps: check.dependencies.sort(),
+      unusedDevDeps: check.devDependencies.sort(),
+      occurrences: Object.entries(check.using)
+        .sort((a, b) => a[1].length - b[1].length)
+        .reduce((sum, [name, files]) => ([
+          ...sum,
+          {
+            name,
+            occurrences: files.length,
+          },
+        ]), [])
+    })
+  }
+  spinner.succeed('Done. Printing results.\n')
+
+  for (const result of results) {
+    console.log(`Dir: ${result.dir}:\n`)
+    console.log('Unused deps:', result.unusedDeps)
+    console.log('Unused deps:', result.unusedDevDeps)
+    console.log('Occurrences:')
+    console.table(result.occurrences)
+    console.log('\n--------------------------------\n')
   }
 
-  spinner.text = 'Aggregating results'
-
-  const aggregated = Object.entries(result)
-    .sort((a, b) => a[1].length - b[1].length)
-    .reduce((sum, [name, files]) => ([
-      ...sum,
-      {
-        name,
-        occurrences: files.length,
-      },
-    ]), [])
-
-  spinner.succeed('Done!')
-
-  console.table(aggregated)
 }
 
 main().catch((err) => {
+  spinner.error()
   console.error(err);
   process.exit(1)
 })
