@@ -2,7 +2,6 @@ const depcheck = require('depcheck');
 const fs = require('fs')
 const path = require('path')
 const ora = require('ora')
-const npm = require('npm-programmatic');
 
 const options = {
   ignoreBinPackage: false, // ignore the packages with bin entry
